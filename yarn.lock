@@ -2784,10 +2784,10 @@ aws4@^1.8.0:
   resolved "https://registry.yarnpkg.com/aws4/-/aws4-1.10.1.tgz#e1e82e4f3e999e2cfd61b161280d16a111f86428"
   integrity sha512-zg7Hz2k5lI8kb7U32998pRRFin7zJlkfezGJjUc2heaD4Pw2wObakCDVzkKztTm/Ln7eiVvYsjqak0Ed4LkMDA==
 
-awslint@1.61.1:
-  version "1.61.1"
-  resolved "https://registry.yarnpkg.com/awslint/-/awslint-1.61.1.tgz#d9af525b591c10642c67de8ac9eeb5dab2706902"
-  integrity sha512-KvyXdQi5IYXjXHAA2z92KjwqfIQ+qIhD9WyFANhQ0gehWN8Dj6jfdYlDDit4chCYSjjQxK0sLuK+yn3dum1Bhg==
+awslint@1.62.0:
+  version "1.62.0"
+  resolved "https://registry.yarnpkg.com/awslint/-/awslint-1.62.0.tgz#fb21c726c305c0d10674d4990e2a64bba06399bc"
+  integrity sha512-QMz7ROESUgfPoaOMcYzGPWDKiYj11o3Zt8b7dJ6/CHGKXNfstTmLTU9BFqu5iCGS+EU/HrEQbojLUzWjmDrD/A==
   dependencies:
     "@jsii/spec" "^1.11.0"
     camelcase "^6.0.0"
@@ -9924,17 +9924,6 @@ ts-node@^8.0.2:
   version "8.10.2"
   resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-8.10.2.tgz#eee03764633b1234ddd37f8db9ec10b75ec7fb8d"
   integrity sha512-ISJJGgkIpDdBhWVu3jufsWpK3Rzo7bdiIXJjQc0ynKxVOVcg2oIrf2H2cejminGrptVc6q6/uynAHNCuWGbpVA==
-  dependencies:
-    arg "^4.1.0"
-    diff "^4.0.1"
-    make-error "^1.1.1"
-    source-map-support "^0.5.17"
-    yn "3.1.1"
-
-ts-node@^9.0.0:
-  version "9.0.0"
-  resolved "https://registry.yarnpkg.com/ts-node/-/ts-node-9.0.0.tgz#e7699d2a110cc8c0d3b831715e417688683460b3"
-  integrity sha512-/TqB4SnererCDR/vb4S/QvSZvzQMJN8daAslg7MeaiHvD8rDZsSfXmNeNumyZZzMned72Xoq/isQljYSt8Ynfg==
   dependencies:
     arg "^4.1.0"
     diff "^4.0.1"
