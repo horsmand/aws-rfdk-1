@@ -41,12 +41,11 @@ import {
   WorkerInstanceConfiguration,
 } from '../lib';
 import {
-  CONFIG_WORKER_ASSET_LINUX,
-  CONFIG_WORKER_ASSET_WINDOWS,
-  CWA_ASSET_LINUX,
   CWA_ASSET_WINDOWS,
-  linuxDownloadRunScriptBoilerplate,
-  windowsDownloadRunScriptBoilerplate,
+  linuxCloudWatchScriptBoilerplate,
+  linuxConfigureWorkerScriptBoilerplate,
+  windowsCloudWatchScriptBoilerplate,
+  windowsConfigureWorkerScriptBoilerplate,
 } from './asset-constants';
 
 describe('Test WorkerInstanceConfiguration for Linux', () => {
@@ -71,14 +70,35 @@ describe('Test WorkerInstanceConfiguration for Linux', () => {
     });
     const userData = stack.resolve(instance.userData.render());
 
-    // THEN
+    // // THEN
     expect(userData).toStrictEqual({
       'Fn::Join': [
         '',
         [
           '#!/bin/bash\nmkdir -p $(dirname \'/tmp/',
-          ...linuxDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_LINUX),
-          `\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'`,
+          ...linuxConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 /tmp/`),
+        ],
+      ],
+    });
+  });
+
+  test('custom listener port', () => {
+    // WHEN
+    new WorkerInstanceConfiguration(stack, 'Config', {
+      worker: instance,
+      workerSettings: {
+        listenerPort: 55555,
+      },
+    });
+    const userData = stack.resolve(instance.userData.render());
+
+    // // THEN
+    expect(userData).toStrictEqual({
+      'Fn::Join': [
+        '',
+        [
+          '#!/bin/bash\nmkdir -p $(dirname \'/tmp/',
+          ...linuxConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 55555 /tmp/`),
         ],
       ],
     });
@@ -96,14 +116,13 @@ describe('Test WorkerInstanceConfiguration for Linux', () => {
     });
     const userData = stack.resolve(instance.userData.render());
 
-    // THEN
+    // // THEN
     expect(userData).toStrictEqual({
       'Fn::Join': [
         '',
         [
           '#!/bin/bash\nmkdir -p $(dirname \'/tmp/',
-          ...linuxDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_LINUX),
-          `\' \'g1,g2\' \'p1,p2\' \'r1\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'`,
+          ...linuxConfigureWorkerScriptBoilerplate(`\' \'g1,g2\' \'p1,p2\' \'r1\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 /tmp/`),
         ],
       ],
     });
@@ -132,12 +151,11 @@ describe('Test WorkerInstanceConfiguration for Linux', () => {
         '',
         [
           '#!/bin/bash\nmkdir -p $(dirname \'/tmp/',
-          ...linuxDownloadRunScriptBoilerplate(CWA_ASSET_LINUX),
+          ...linuxCloudWatchScriptBoilerplate(),
           '\' ',
           ssmParamName,
           '\nmkdir -p $(dirname \'/tmp/',
-          ...linuxDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_LINUX),
-          `\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'`,
+          ...linuxConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 /tmp/`),
         ],
       ],
     });
@@ -189,33 +207,7 @@ describe('Test WorkerInstanceConfiguration for Windows', () => {
         '',
         [
           '<powershell>mkdir (Split-Path -Path \'C:/temp/',
-          ...windowsDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_WINDOWS),
-          `\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'` +
-          '\nif (!$?) { Write-Error \'Failed to execute the file \"C:/temp/',
-          {
-            'Fn::Select': [
-              0,
-              {
-                'Fn::Split': [
-                  '||',
-                  {
-                    Ref: CONFIG_WORKER_ASSET_WINDOWS.Key,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            'Fn::Select': [
-              1,
-              {
-                'Fn::Split': [
-                  '||',
-                  {Ref: CONFIG_WORKER_ASSET_WINDOWS.Key},
-                ],
-              },
-            ],
-          },
+          ...windowsConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 C:/temp/`),
           '\"\' -ErrorAction Stop }</powershell>',
         ],
       ],
@@ -240,33 +232,30 @@ describe('Test WorkerInstanceConfiguration for Windows', () => {
         '',
         [
           '<powershell>mkdir (Split-Path -Path \'C:/temp/',
-          ...windowsDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_WINDOWS),
-          `\' \'g1,g2\' \'p1,p2\' \'r1\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'` +
-          '\nif (!$?) { Write-Error \'Failed to execute the file \"C:/temp/',
-          {
-            'Fn::Select': [
-              0,
-              {
-                'Fn::Split': [
-                  '||',
-                  {
-                    Ref: CONFIG_WORKER_ASSET_WINDOWS.Key,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            'Fn::Select': [
-              1,
-              {
-                'Fn::Split': [
-                  '||',
-                  {Ref: CONFIG_WORKER_ASSET_WINDOWS.Key},
-                ],
-              },
-            ],
-          },
+          ...windowsConfigureWorkerScriptBoilerplate(`\' \'g1,g2\' \'p1,p2\' \'r1\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 C:/temp/`),
+          '\"\' -ErrorAction Stop }</powershell>',
+        ],
+      ],
+    });
+  });
+
+  test('custom listner port', () => {
+    // WHEN
+    new WorkerInstanceConfiguration(stack, 'Config', {
+      worker: instance,
+      workerSettings: {
+        listenerPort: 55555,
+      },
+    });
+    const userData = stack.resolve(instance.userData.render());
+
+    // THEN
+    expect(userData).toStrictEqual({
+      'Fn::Join': [
+        '',
+        [
+          '<powershell>mkdir (Split-Path -Path \'C:/temp/',
+          ...windowsConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 55555 C:/temp/`),
           '\"\' -ErrorAction Stop }</powershell>',
         ],
       ],
@@ -296,7 +285,7 @@ describe('Test WorkerInstanceConfiguration for Windows', () => {
         '',
         [
           '<powershell>mkdir (Split-Path -Path \'C:/temp/',
-          ...windowsDownloadRunScriptBoilerplate(CWA_ASSET_WINDOWS),
+          ...windowsCloudWatchScriptBoilerplate(),
           '\' ',
           ssmParamName,
           '\nif (!$?) { Write-Error \'Failed to execute the file \"C:/temp/',
@@ -326,33 +315,7 @@ describe('Test WorkerInstanceConfiguration for Windows', () => {
           },
           '\"\' -ErrorAction Stop }' +
           '\nmkdir (Split-Path -Path \'C:/temp/',
-          ...windowsDownloadRunScriptBoilerplate(CONFIG_WORKER_ASSET_WINDOWS),
-          `\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\'` +
-          '\nif (!$?) { Write-Error \'Failed to execute the file \"C:/temp/',
-          {
-            'Fn::Select': [
-              0,
-              {
-                'Fn::Split': [
-                  '||',
-                  {
-                    Ref: CONFIG_WORKER_ASSET_WINDOWS.Key,
-                  },
-                ],
-              },
-            ],
-          },
-          {
-            'Fn::Select': [
-              1,
-              {
-                'Fn::Split': [
-                  '||',
-                  {Ref: CONFIG_WORKER_ASSET_WINDOWS.Key},
-                ],
-              },
-            ],
-          },
+          ...windowsConfigureWorkerScriptBoilerplate(`\' \'\' \'\' \'\' \'${Version.MINIMUM_SUPPORTED_DEADLINE_VERSION.toString()}\' 56032 C:/temp/`),
           '\"\' -ErrorAction Stop }</powershell>',
         ],
       ],
