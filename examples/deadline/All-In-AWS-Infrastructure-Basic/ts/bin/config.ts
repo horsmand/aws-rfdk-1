@@ -15,11 +15,13 @@ import { MongoDbSsplLicenseAcceptance } from 'aws-rfdk';
 class AppConfig {
 
   /**
-   * A map of regions to Deadline Client Linux AMIs. As an example, the Linux Deadline 10.1.11.5 AMI ID from us-west-2
+   * A map of regions to Deadline Client Linux AMIs. As an example, the Linux Deadline 10.1.10.6 AMI ID from us-west-2
    * is filled in. It can be used as-is, added to, or replaced. Ideally the version here should match the one in
    * package.json used for staging the render queue and usage based licensing recipes.
+   *
+   * There is a Windows AMI ID hardcoded in the compute tier using the same version.
    */
-  public readonly deadlineClientLinuxAmiMap: Record<string, string> = {['us-west-2']: 'ami-0b12631d34ca9939f'};
+  public readonly deadlineClientLinuxAmiMap: Record<string, string> = {['us-west-2']: 'ami-05d4887175201bde8'};
 
   /**
    * (Optional) A secret (in binary form) in SecretsManager that stores the UBL certificates in a .zip file.
@@ -34,7 +36,7 @@ class AppConfig {
   /**
    * (Optional) The name of the EC2 keypair to associate with instances.
    */
-  public readonly keyPairName?: string;
+  public readonly keyPairName?: string = "OpenSshDevBox";
 
   /**
    * Whether to use MongoDB to back the render farm.

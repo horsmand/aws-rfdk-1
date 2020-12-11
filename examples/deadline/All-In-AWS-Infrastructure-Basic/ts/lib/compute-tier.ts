@@ -7,12 +7,13 @@ import {
   BastionHostLinux,
   IMachineImage,
   IVpc,
+  MachineImage,
   Port,
 } from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
 import {
   IHost,
-  InstanceUserDataProvider,  
+  InstanceUserDataProvider,
   IRenderQueue,
   IWorkerFleet,
   UsageBasedLicense,
@@ -72,7 +73,7 @@ class UserDataProvider extends InstanceUserDataProvider {
   }
   preRenderQueueConfiguration(host: IHost): void {
     host.userData.addCommands('echo preRenderQueueConfiguration');
-  }  
+  }
   preWorkerConfiguration(host: IHost): void {
     host.userData.addCommands('echo preWorkerConfiguration');
   }
@@ -80,7 +81,7 @@ class UserDataProvider extends InstanceUserDataProvider {
     host.userData.addCommands('echo postWorkerLaunch');
     if (host.node.scope != undefined) {
       const testScript = new Asset(
-        host.node.scope as cdk.Construct, 
+        host.node.scope as cdk.Construct,
         'SampleAsset',
         {path: path.join(__dirname, '..', '..', 'scripts', 'configure_worker.sh')},
       );
@@ -107,6 +108,11 @@ export class ComputeTier extends cdk.Stack {
   public readonly workerFleet: IWorkerFleet;
 
   /**
+   * The {@link IWorkerFleet}.
+   */
+  public readonly workerFleetWindows: IWorkerFleet;
+
+  /**
    * The {@link IHealthMonitor} used to maintain the worker fleet.
    */
   public readonly healthMonitor: IHealthMonitor;
@@ -119,7 +125,7 @@ export class ComputeTier extends cdk.Stack {
    */
   constructor(scope: cdk.Construct, id: string, props: ComputeTierProps) {
     super(scope, id, props);
-    
+
     this.healthMonitor = new HealthMonitor(this, 'HealthMonitor', {
       vpc: props.vpc,
       // TODO - Evaluate deletion protection for your own needs. This is set to false to
@@ -128,13 +134,24 @@ export class ComputeTier extends cdk.Stack {
       deletionProtection: false,
     });
 
+    const userDataProvider = new UserDataProvider(this, 'UserDataProvider');
+
     this.workerFleet = new WorkerInstanceFleet(this, 'WorkerFleet', {
       vpc: props.vpc,
       renderQueue: props.renderQueue,
       workerMachineImage: props.workerMachineImage,
       healthMonitor: this.healthMonitor,
       keyName: props.keyPairName,
-      userDataProvider: new UserDataProvider(this, 'UserDataProvider'),
+      userDataProvider,
+    });
+
+    // This is hardcoded with the Deadline 10.1.10.6 Windows Worker Base AMI
+    this.workerFleetWindows = new WorkerInstanceFleet(this, 'WorkerFleetWindows', {
+      vpc: props.vpc,
+      renderQueue: props.renderQueue,
+      workerMachineImage: MachineImage.genericWindows({['us-west-2']: 'ami-09c712180218564f2'}),
+      keyName: props.keyPairName,
+      userDataProvider,
     });
 
     if (props.usageBasedLicensing && props.licenses) {

@@ -8,7 +8,9 @@
 ---
 **NOTE**
 
-These instructions assume that your working directory is `examples/deadline/All-In-AWS-Infrastructure-Basic/ts/` relative to the root of the RFDK package.
+1. This has been modified to add a second Windows worker fleet as well as a separate Windows EC2 instance that can be used to open Deadline monitor and interact with the farm.
+
+1. These instructions assume that your working directory is `examples/deadline/All-In-AWS-Infrastructure-Basic/ts/` relative to the root of the RFDK package.
 
 ---
 
@@ -57,12 +59,7 @@ These instructions assume that your working directory is `examples/deadline/All-
     ];
     ```
 
-    ---
-
-    **Note:** The next two steps are for allowing SSH access to your render farm and are optional. You may skip these if you do not need SSH access into your render farm.
-
-    ---
-7.  Create an EC2 key pair to give you SSH access to the render farm:
+7.  Create an EC2 key pair to give you SSH access to the render farm, this will be required for RDP sessions to your windows monitor host:
 
     ```
     aws ec2 create-key-pair --key-name <key-name>
@@ -111,7 +108,38 @@ These instructions assume that your working directory is `examples/deadline/All-
     ```
     cdk deploy "*"
     ```
-14. Once you are finished with the sample app, you can tear it down by running:
+
+14. Connect to your Windows monitor host through RDP by finding it in the EC2 console and using your key pair to get the password.
+
+15. Run these commands in a PowerShell, filling in the proper secret ARN, to download the CA cert for configuring the RCS connection:
+
+    ```
+    $root_ca_publickey_arn = "arn:aws:secretsmanager:us-west-2:<########>:secret:ServiceTier/RQCert-X.509-CertificateChain-<#####>"
+    $secret_manager = Get-SECSecretValue -SecretId $root_ca_publickey_arn
+    Set-Content -Path ca.crt -Value $secret_manager.SecretString
+    ```
+
+15. Download the Deadline client installer:
+
+    ```
+    Read-S3Object -bucket thinkbox-installers -key Deadline/10.1.10.6/Windows/DeadlineClient-10.1.10.6-windows-installer.exe DeadlineClient-Installer-10.1.10.6.exe
+    ```
+
+16. Run the installer, make sure not to install RCS, don't auto-start a worker, and select a direct connection to the repository, but leave the repository field blank.
+
+17. Run these Deadline commands in a terminal to configure the connection to your RCS:
+
+    ```
+    "%DEADLINE_PATH%"\deadlinecommand.exe -SetIniFileSetting ConnectionType Remote
+    "%DEADLINE_PATH%"\deadlinecommand.exe -SetIniFileSetting ProxyUseSSL True
+    "%DEADLINE_PATH%"\deadlinecommand.exe -SetIniFileSetting ClientSSLAuthentication NotRequired
+    "%DEADLINE_PATH%"\deadlinecommand.exe -SetIniFileSetting ProxySSLCA "C:\Users\Administrator\ca.crt"
+    "%DEADLINE_PATH%"\deadlinecommand.exe -ChangeRepository Proxy renderqueue.deadline-test.internal:4433 "C:\Users\Administrator\ca.crt"
+    ```
+
+18. Open the Deadline Monitor, you should be connected to your farm!
+
+20. Once you are finished with the sample app, you can tear it down by running:
 
     ```
     cdk destroy "*"

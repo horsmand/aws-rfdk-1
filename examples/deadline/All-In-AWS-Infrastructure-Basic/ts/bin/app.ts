@@ -6,9 +6,22 @@
 
 import 'source-map-support/register';
 import * as path from 'path';
-import * as pkg from '../package.json';
-import { config } from './config';
+
 import * as cdk from '@aws-cdk/core';
+import {
+  Instance,
+  InstanceClass,
+  InstanceSize,
+  InstanceType,
+  MachineImage,
+  Port,
+  SubnetType,
+  WindowsVersion,
+} from '@aws-cdk/aws-ec2';
+
+import { config } from './config';
+
+import * as pkg from '../package.json';
 import { NetworkTier } from '../lib/network-tier';
 import { ServiceTier } from '../lib/service-tier';
 import {
@@ -17,13 +30,8 @@ import {
   StorageTierMongoDB,
 } from '../lib/storage-tier';
 import { SecurityTier } from '../lib/security-tier';
-import {
-  InstanceClass,
-  InstanceSize,
-  InstanceType,
-  MachineImage,
-} from '@aws-cdk/aws-ec2';
 import { ComputeTier } from '../lib/compute-tier';
+import { PolicyStatement } from '@aws-cdk/aws-iam';
 
   // ------------------------------ //
   // --- Validate Config Values --- //
@@ -38,7 +46,7 @@ import { ComputeTier } from '../lib/compute-tier';
   }
 
   if (!config.keyPairName) {
-    console.log('EC2 key pair name not specified. You will not have SSH access to the render farm.');
+    throw new Error('EC2 key pair name not specified. This is required for RDP sessions to the windows monitor host.');
   }
 
   if (config.deadlineClientLinuxAmiMap === {['region']: 'ami-id'}) {
@@ -111,7 +119,7 @@ const service = new ServiceTier(app, 'ServiceTier', {
 // --- Compute Tier --- //
 // -------------------- //
 
-new ComputeTier(app, 'ComputeTier', {
+const computeTier = new ComputeTier(app, 'ComputeTier', {
   env,
   vpc: network.vpc,
   renderQueue: service.renderQueue,
@@ -120,3 +128,27 @@ new ComputeTier(app, 'ComputeTier', {
   usageBasedLicensing: service.ublLicensing,
   licenses: config.ublLicenses,
 });
+
+const testStack = new cdk.Stack(app, 'TestStack', { env });
+const farmMonitor = new Instance(testStack, 'testInstance', {
+  vpc: network.vpc,
+  vpcSubnets: { subnetType: SubnetType.PUBLIC },
+  instanceType: InstanceType.of(InstanceClass.T2, InstanceSize.MEDIUM),
+  machineImage: MachineImage.latestWindows(WindowsVersion.WINDOWS_SERVER_2019_ENGLISH_FULL_BASE),
+  keyName: config.keyPairName ? config.keyPairName : undefined,
+});
+farmMonitor.connections.allowFromAnyIpv4(Port.tcp(3389));
+
+// S3 will be needed to download the Deadline client installer and secretsmanager is to retrieve the
+// CA cert for connecting to the RCS. This policy is way too permissive
+farmMonitor.addToRolePolicy(new PolicyStatement({
+  actions: [
+    's3:*',
+    'secretsmanager:*',
+  ],
+  resources: ['*'],
+}));
+
+farmMonitor.connections.allowToDefaultPort(service.renderQueue.endpoint);
+computeTier.workerFleet.allowListenerPortTo(farmMonitor.connections);
+computeTier.workerFleetWindows.allowListenerPortTo(farmMonitor.connections);
