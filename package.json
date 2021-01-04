@@ -57,6 +57,7 @@
     "@aws-cdk/aws-events": "1.78.0",
     "@aws-cdk/aws-events-targets": "1.78.0",
     "@aws-cdk/aws-iam": "1.78.0",
+    "@aws-cdk/aws-imagebuilder": "1.78.0",
     "@aws-cdk/aws-kinesis": "1.78.0",
     "@aws-cdk/aws-kinesisfirehose": "1.78.0",
     "@aws-cdk/aws-kms": "1.78.0",

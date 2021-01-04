@@ -1,0 +1,36 @@
+name: Deadline-PocStack/InstallerBucket/${Token[TOKEN.121]}
+schemaVersion: 1.0
+
+phases:
+  -
+    name: 'build'
+    steps:
+      -
+        name: DownloadDeadlineClient
+        action: S3Download
+        timeoutSeconds: 60
+        onFailure: Abort
+        maxAttempts: 3
+        inputs:
+          -
+            source: 's3://thinkbox-installers/Deadline/PocStack/InstallerBucket/${Token[TOKEN.121]}/Linux/DeadlineClient-PocStack/InstallerBucket/${Token[TOKEN.121]}-linux-x64-installer.run'
+            destination: '/tmp/DeadlineClient-PocStack/InstallerBucket/${Token[TOKEN.121]}-linux-x64-installer.run'
+      -
+        name: InstallDeadline
+        action: ExecuteBash
+        timeoutSeconds: 600
+        onFailure: Abort
+        maxAttempts: 1
+        inputs:
+          commands:
+            - "chmod +x {{ build.DownloadDeadlineClient.inputs[0].destination }}"
+            - "{{ build.DownloadDeadlineClient.inputs[0].destination }} --mode unattended \
+                  --connectiontype Remote \
+                  --proxyrootdir 127.0.0.1:8080 \
+                  --noguimode true \
+                  --slavestartup false \
+                  --launcherdaemon true \
+                  --daemonuser $USER \
+                  --restartstalled true \
+                  --autoupdateoverride False && \
+              rm {{ build.DownloadDeadlineClient.inputs[0].destination }}"

@@ -143,11 +143,16 @@ export class VersionQuery extends VersionQueryBase {
     this.minorVersion = Token.asNumber(deadlineResource.getAtt('MinorVersion'));
     this.releaseVersion = Token.asNumber(deadlineResource.getAtt('ReleaseVersion'));
 
+    const s3Bucket = Bucket.fromBucketName(scope, 'InstallerBucket', Token.asString(deadlineResource.getAtt('S3Bucket')));
     this.linuxInstallers = {
       patchVersion: Token.asNumber(deadlineResource.getAtt('LinuxPatchVersion')),
+      client: {
+        objectKey: Token.asString(deadlineResource.getAtt('LinuxClientInstaller')),
+        s3Bucket,
+      },
       repository: {
         objectKey: Token.asString(deadlineResource.getAtt('LinuxRepositoryInstaller')),
-        s3Bucket: Bucket.fromBucketName(scope, 'InstallerBucket', Token.asString(deadlineResource.getAtt('S3Bucket'))),
+        s3Bucket,
       },
     };
   }

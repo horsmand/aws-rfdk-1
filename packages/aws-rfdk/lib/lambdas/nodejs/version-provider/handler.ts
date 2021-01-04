@@ -61,6 +61,11 @@ export interface FlatVersionedUriOutput {
   readonly LinuxPatchVersion: string;
 
   /**
+   * The object key of the Deadline client installer for Linux.
+   */
+  readonly LinuxClientInstaller: string;
+
+  /**
    * The object key of the Deadline repository installer for Linux.
    */
   readonly LinuxRepositoryInstaller: string;
@@ -100,6 +105,7 @@ export class VersionProviderResource extends SimpleCustomResource {
     const deadlineLinuxUris = deadlineLinux.Uris;
 
     const s3Bucket = this.parseS3BucketName(deadlineLinuxUris.bundle);
+    const linuxClientObjectKey = this.parseS3ObjectKey(deadlineLinuxUris.clientInstaller!);
     const linuxRepoObjectKey = this.parseS3ObjectKey(deadlineLinuxUris.repositoryInstaller!);
 
     return {
@@ -108,6 +114,7 @@ export class VersionProviderResource extends SimpleCustomResource {
       MinorVersion: deadlineLinux.MinorVersion,
       ReleaseVersion: deadlineLinux.ReleaseVersion,
       LinuxPatchVersion: deadlineLinux.PatchVersion,
+      LinuxClientInstaller: linuxClientObjectKey,
       LinuxRepositoryInstaller: linuxRepoObjectKey,
     };
   }
