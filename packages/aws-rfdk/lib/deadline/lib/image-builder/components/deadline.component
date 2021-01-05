@@ -1,0 +1,38 @@
+name: Deadline-10.1.12.1
+schemaVersion: 1.0
+
+phases:
+  -
+    name: 'build'
+    steps:
+      -
+        name: DownloadDeadlineClient
+        action: S3Download
+        timeoutSeconds: 60
+        onFailure: Abort
+        maxAttempts: 3
+        inputs:
+          -
+            source: 's3://thinkbox-installers/Deadline/10.1.12.1/Linux/DeadlineClient-10.1.12.1-linux-x64-installer.run'
+            destination: '/tmp/DeadlineClient-10.1.12.1-linux-x64-installer.run'
+      -
+        name: InstallDeadline
+        action: ExecuteBash
+        timeoutSeconds: 600
+        onFailure: Abort
+        maxAttempts: 1
+        inputs:
+          commands:
+            - "chmod +x {{ build.DownloadDeadlineClient.inputs[0].destination }}"
+            - "echo '{{ build.DownloadDeadlineClient.inputs[0].destination }} --mode unattended \
+                  --connectiontype Remote \
+                  --noguimode true \
+                  --launcherdaemon true \
+                  --autoupdateoverride false'"
+            - "echo 'Installing Deadline'"
+            - "{{ build.DownloadDeadlineClient.inputs[0].destination }} --mode unattended \
+                  --connectiontype Remote \
+                  --noguimode true \
+                  --launcherdaemon true \
+                  --autoupdateoverride false && \
+              rm {{ build.DownloadDeadlineClient.inputs[0].destination }}"

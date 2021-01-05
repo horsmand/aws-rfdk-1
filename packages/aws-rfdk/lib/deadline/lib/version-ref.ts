@@ -32,6 +32,15 @@ export interface PlatformInstallers {
   readonly patchVersion: number;
 
   /**
+   * The Deadline Client installer for this platform, as extracted from the bundle on the Thinkbox download site.
+   * For example:
+   *
+   * - DeadlineClient-10.1.8.5-linux-x64-installer.run
+   * - DeadlineClient-10.1.8.5-windows-installer.exe
+   */
+  readonly client: Installer;
+
+  /**
    * The Deadline Repository installer for this platform, as extracted from the bundle on the Thinkbox download site.
    * For example:
    *

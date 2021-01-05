@@ -76,9 +76,13 @@ beforeEach(() => {
     releaseVersion: 9,
     linuxInstallers: {
       patchVersion: 2,
+      client: {
+        objectKey: 'testInstallerClient',
+        s3Bucket: new Bucket(stack, 'InstallerBucketClient'),
+      },
       repository: {
-        objectKey: 'testInstaller',
-        s3Bucket: new Bucket(stack, 'InstallerBucket'),
+        objectKey: 'testInstallerRepo',
+        s3Bucket: new Bucket(stack, 'InstallerBucketRepo'),
       },
     },
     linuxFullVersionString: () => '10.1.9.2',

@@ -16,3 +16,4 @@ export * from './version';
 export * from './version-query';
 export * from './version-ref';
 export * from './worker-configuration';
+export * from './image-builder/pipeline';

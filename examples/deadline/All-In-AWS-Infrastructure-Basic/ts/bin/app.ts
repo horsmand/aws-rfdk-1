@@ -6,9 +6,19 @@
 
 import 'source-map-support/register';
 import * as path from 'path';
-import * as pkg from '../package.json';
-import { config } from './config';
+import {
+  InstanceClass,
+  InstanceSize,
+  InstanceType,
+  MachineImage,
+} from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
+import {
+  ImageBuilderPipeline,
+  OSType,
+} from 'aws-rfdk/deadline';
+import { config } from './config';
+import * as pkg from '../package.json';
 import { NetworkTier } from '../lib/network-tier';
 import { ServiceTier } from '../lib/service-tier';
 import {
@@ -17,12 +27,6 @@ import {
   StorageTierMongoDB,
 } from '../lib/storage-tier';
 import { SecurityTier } from '../lib/security-tier';
-import {
-  InstanceClass,
-  InstanceSize,
-  InstanceType,
-  MachineImage,
-} from '@aws-cdk/aws-ec2';
 import { ComputeTier } from '../lib/compute-tier';
 
   // ------------------------------ //
@@ -55,6 +59,15 @@ const env = {
 };
 
 const app = new cdk.App();
+
+const stack = new cdk.Stack(app, 'PocImageStack', { env });
+
+const deadlineWorkerImage = new ImageBuilderPipeline(stack, 'DeadlineBuildingPipeline', {
+  osType: OSType.LINUX,
+  parentAmi: 'ami-07dd19a7900a1f049',
+  imageVersion: '1.0.4',
+  componentVersion: '1.0.3',
+});
 
 // -------------------- //
 // --- Network Tier --- //
@@ -115,7 +128,7 @@ new ComputeTier(app, 'ComputeTier', {
   env,
   vpc: network.vpc,
   renderQueue: service.renderQueue,
-  workerMachineImage: MachineImage.genericLinux(config.deadlineClientLinuxAmiMap),
+  workerMachineImage: MachineImage.genericLinux({ ['us-west-2']: deadlineWorkerImage.amiId }),
   keyPairName: config.keyPairName ? config.keyPairName : undefined,
   usageBasedLicensing: service.ublLicensing,
   licenses: config.ublLicenses,
