@@ -111,7 +111,11 @@
 
 14. Connect to your Windows monitor host through RDP by finding it in the EC2 console and using your key pair to get the password.
 
-15. Run these commands in a PowerShell, filling in the proper secret ARN, to download the CA cert for configuring the RCS connection:
+15. Add a role to your instance with `SecretsManagerReadWrite` and `AmazonS3ReadOnlyAccess`.
+
+16. Add a rule to your RCS Load Balancer's security group (make sure it's the LB and not your RCS's Cluster) to open up port 8080 for HTTP or 4433 for HTTPS to your instance's security group.
+
+17. Run these commands in a PowerShell, filling in the proper secret ARN, to download the CA cert for configuring the RCS connection:
 
     ```
     $root_ca_publickey_arn = "arn:aws:secretsmanager:us-west-2:<########>:secret:ServiceTier/RQCert-X.509-CertificateChain-<#####>"
@@ -119,15 +123,15 @@
     Set-Content -Path ca.crt -Value $secret_manager.SecretString
     ```
 
-15. Download the Deadline client installer:
+18. Download the Deadline client installer:
 
     ```
     Read-S3Object -bucket thinkbox-installers -key Deadline/10.1.10.6/Windows/DeadlineClient-10.1.10.6-windows-installer.exe DeadlineClient-Installer-10.1.10.6.exe
     ```
 
-16. Run the installer, make sure not to install RCS, don't auto-start a worker, and select a direct connection to the repository, but leave the repository field blank.
+19. Run the installer, make sure not to install RCS, don't auto-start a worker, and select a direct connection to the repository, but leave the repository field blank.
 
-17. Run these Deadline commands in a terminal to configure the connection to your RCS:
+20. Run these Deadline commands in a terminal to configure the connection to your RCS:
 
     ```
     "%DEADLINE_PATH%"\deadlinecommand.exe -SetIniFileSetting ConnectionType Remote
@@ -137,9 +141,9 @@
     "%DEADLINE_PATH%"\deadlinecommand.exe -ChangeRepository Proxy renderqueue.deadline-test.internal:4433 "C:\Users\Administrator\ca.crt"
     ```
 
-18. Open the Deadline Monitor, you should be connected to your farm!
+21. Open the Deadline Monitor, you should be connected to your farm!
 
-20. Once you are finished with the sample app, you can tear it down by running:
+22. Once you are finished with the sample app, you can tear it down by running:
 
     ```
     cdk destroy "*"
