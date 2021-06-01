@@ -174,7 +174,7 @@ export class RenderQueue extends RenderQueueBase implements IGrantable {
   /**
    * Regular expression that validates a hostname (portion in front of the subdomain).
    */
-  private static readonly RE_VALID_HOSTNAME = /^[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
+  // private static readonly RE_VALID_HOSTNAME = /^[a-z](?:[a-z0-9-]{0,61}[a-z0-9])?$/i;
 
   /**
    * The principal to grant permissions to.
@@ -275,37 +275,11 @@ export class RenderQueue extends RenderQueueBase implements IGrantable {
 
     this.version = props?.version;
 
-    let externalProtocol: ApplicationProtocol;
-    if ( props.trafficEncryption?.externalTLS ) {
-      externalProtocol = ApplicationProtocol.HTTPS;
-
-      if ( (props.trafficEncryption.externalTLS.acmCertificate === undefined ) ===
-      (props.trafficEncryption.externalTLS.rfdkCertificate === undefined) ) {
-        throw new Error('Exactly one of externalTLS.acmCertificate and externalTLS.rfdkCertificate must be provided when using externalTLS.');
-      } else if (props.trafficEncryption.externalTLS.rfdkCertificate ) {
-        if (props.trafficEncryption.externalTLS.rfdkCertificate.certChain === undefined) {
-          throw new Error('Provided rfdkCertificate does not contain a certificate chain.');
-        }
-        this.clientCert = new ImportedAcmCertificate(this, 'AcmCert', props.trafficEncryption.externalTLS.rfdkCertificate );
-        this.certChain = props.trafficEncryption.externalTLS.rfdkCertificate.certChain;
-      } else {
-        if (props.trafficEncryption.externalTLS.acmCertificateChain === undefined) {
-          throw new Error('externalTLS.acmCertificateChain must be provided when using externalTLS.acmCertificate.');
-        }
-        this.clientCert = props.trafficEncryption.externalTLS.acmCertificate;
-        this.certChain = props.trafficEncryption.externalTLS.acmCertificateChain;
-      }
-    } else {
-      externalProtocol = ApplicationProtocol.HTTP;
-    }
+    const externalProtocol = ApplicationProtocol.HTTPS;
 
     this.version = props.version;
 
     const internalProtocol = props.trafficEncryption?.internalProtocol ?? ApplicationProtocol.HTTPS;
-
-    if (externalProtocol === ApplicationProtocol.HTTPS && !props.hostname) {
-      throw new Error('A hostname must be provided when the external protocol is HTTPS');
-    }
 
     this.cluster = new Cluster(this, 'Cluster', {
       vpc: props.vpc,
@@ -365,17 +339,10 @@ export class RenderQueue extends RenderQueueBase implements IGrantable {
     });
     this.taskDefinition = taskDefinition;
 
-    // The fully-qualified domain name to use for the ALB
-    let loadBalancerFQDN: string | undefined;
-    if (props.hostname) {
-      const label = props.hostname.hostname ?? 'renderqueue';
-      if (props.hostname.hostname && !RenderQueue.RE_VALID_HOSTNAME.test(label)) {
-        throw new Error(`Invalid RenderQueue hostname: ${label}`);
-      }
-      loadBalancerFQDN = `${label}.${props.hostname.zone.zoneName}`;
-    }
-
+    // We need to set the load balancer name here to make sure the DNS entry is less than 64 characters, which
+    // is the max length of the common name on an X509 certificate
     const loadBalancer = new ApplicationLoadBalancer(this, 'LB', {
+      loadBalancerName: 'rqAlb',
       vpc: this.cluster.vpc,
       vpcSubnets: props.vpcSubnetsAlb ?? { subnetType: SubnetType.PRIVATE, onePerAz: true },
       internetFacing: false,
@@ -383,12 +350,29 @@ export class RenderQueue extends RenderQueueBase implements IGrantable {
       securityGroup: props.securityGroups?.frontend,
     });
 
+    const rootCa = new X509CertificatePem(this, 'RootCA', {
+      subject: {
+        cn: 'DeadlineRootCA',
+      },
+    });
+
+    const serverCert = new X509CertificatePem(this, 'RQCert', {
+      subject: {
+        cn: loadBalancer.loadBalancerDnsName, // Max length 64 characters
+      },
+      signingCertificate: rootCa,
+    });
+
+    serverCert.node.addDependency(rootCa);
+
+    this.clientCert = new ImportedAcmCertificate(this, 'AcmCert', serverCert );
+    this.certChain = serverCert.certChain;
+
+    // We do not set a domainName or domainZone here, so it defaults to using the DNS entry of the ALB for the domainName
     this.pattern = new ApplicationLoadBalancedEc2Service(this, 'AlbEc2ServicePattern', {
       certificate: this.clientCert,
       cluster: this.cluster,
       desiredCount: props.renderQueueSize?.desired,
-      domainZone: props.hostname?.zone,
-      domainName: loadBalancerFQDN,
       listenerPort: externalPortNumber,
       loadBalancer,
       protocol: externalProtocol,
@@ -465,22 +449,16 @@ export class RenderQueue extends RenderQueueBase implements IGrantable {
     });
 
     this.endpoint = new ConnectableApplicationEndpoint({
-      address: loadBalancerFQDN ?? this.pattern.loadBalancer.loadBalancerDnsName,
+      address: this.pattern.loadBalancer.loadBalancerDnsName,
       port: externalPortNumber,
       connections: this.connections,
       protocol: externalProtocol,
     });
 
-    if ( externalProtocol === ApplicationProtocol.HTTP ) {
-      this.rqConnection = RenderQueueConnection.forHttp({
-        endpoint: this.endpoint,
-      });
-    } else {
-      this.rqConnection = RenderQueueConnection.forHttps({
-        endpoint: this.endpoint,
-        caCert: this.certChain!,
-      });
-    }
+    this.rqConnection = RenderQueueConnection.forHttps({
+      endpoint: this.endpoint,
+      caCert: this.certChain!,
+    });
 
     this.ecsServiceStabilized = new WaitForStableService(this, 'WaitForStableService', {
       service: this.pattern.service,

@@ -21,7 +21,7 @@ class AppConfig {
    *
    * See https://www.awsthinkbox.com/end-user-license-agreement for the terms of the agreement.
    */
-  public readonly acceptAwsThinkboxEula: AwsThinkboxEulaAcceptance = AwsThinkboxEulaAcceptance.USER_REJECTS_AWS_THINKBOX_EULA;
+  public readonly acceptAwsThinkboxEula: AwsThinkboxEulaAcceptance = AwsThinkboxEulaAcceptance.USER_ACCEPTS_AWS_THINKBOX_EULA;
 
   /**
    * Fill this in if you want to receive alarm emails when:
@@ -38,29 +38,31 @@ class AppConfig {
    * "10.1.12"
    * @default The latest available version of Deadline is used
    */
-  public readonly deadlineVersion?: string;
+  public readonly deadlineVersion?: string = '10.1.15';
 
   /**
    * A map of regions to Deadline Client Linux AMIs. As an example, the Linux Deadline 10.1.15.2 AMI ID from us-west-2
    * is filled in. It can be used as-is, added to, or replaced. Ideally the version here should match the version of
    * Deadline used in any connected Deadline constructs.
+   * 10.1.14.5 ami-03b0cb310cfc17d53
+   * 10.1.15.2 ami-0c8431fc72742c110
    */
   public readonly deadlineClientLinuxAmiMap: Record<string, string> = {['us-west-2']: 'ami-0c8431fc72742c110'};
 
   /**
    * (Optional) A secret (in binary form) in SecretsManager that stores the UBL certificates in a .zip file.
    */
-  public readonly ublCertificatesSecretArn?: string;
+  public readonly ublCertificatesSecretArn?: string; //= 'arn:aws:secretsmanager:us-west-2:121858446379:secret:Certificates-9KxP1K';
 
   /**
    * (Optional) The UBL licenses to use.
    */
-  public readonly ublLicenses?: UsageBasedLicense[];
+  public readonly ublLicenses?: UsageBasedLicense[]; //= [ UsageBasedLicense.forHoudini(), UsageBasedLicense.forMantra() ];
 
   /**
    * (Optional) The name of the EC2 keypair to associate with instances.
    */
-  public readonly keyPairName?: string;
+  public readonly keyPairName?: string = 'OpenSshDevBox';
 
   /**
    * Whether to use MongoDB to back the render farm.

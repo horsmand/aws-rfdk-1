@@ -4,21 +4,21 @@
  */
 
 import {
-  BastionHostLinux,
-  BlockDeviceVolume,
+  // BastionHostLinux,
+  // BlockDeviceVolume,
   IVpc,
-  SubnetType,
+  // SubnetType,
 } from '@aws-cdk/aws-ec2';
 import {
   ApplicationProtocol,
 } from '@aws-cdk/aws-elasticloadbalancingv2';
-import {
-  IPrivateHostedZone,
-} from '@aws-cdk/aws-route53';
+// import {
+//   IPrivateHostedZone,
+// } from '@aws-cdk/aws-route53';
 import * as cdk from '@aws-cdk/core';
 import {
   MountableEfs,
-  X509CertificatePem,
+  // X509CertificatePem,
 } from 'aws-rfdk';
 import {
   AwsThinkboxEulaAcceptance,
@@ -57,12 +57,12 @@ export interface ServiceTierProps extends cdk.StackProps {
   /**
    * Our self-signed root CA certificate for the internal endpoints in the farm.
    */
-  readonly rootCa: X509CertificatePem;
+  // readonly rootCa: X509CertificatePem;
 
   /**
    * Internal DNS zone for the VPC.
    */
-  readonly dnsZone: IPrivateHostedZone;
+  // readonly dnsZone: IPrivateHostedZone;
 
   /**
    * The ARN of the secret containing the UBL certificates .zip file (in binary form).
@@ -95,7 +95,7 @@ export class ServiceTier extends cdk.Stack {
   /**
    * A bastion host to connect to the render farm with.
    */
-  public readonly bastion: BastionHostLinux;
+  // public readonly bastion: BastionHostLinux;
 
   /**
    * The render queue.
@@ -125,27 +125,27 @@ export class ServiceTier extends cdk.Stack {
     // Not a critical component of the farm, so this can be safely removed. An alternative way
     // to access your hosts is also provided by the Session Manager, which is also configured
     // later in this example.
-    this.bastion = new BastionHostLinux(this, 'Bastion', {
-      vpc: props.vpc,
-      subnetSelection: {
-        subnetType: SubnetType.PUBLIC,
-      },
-      blockDevices: [{
-        deviceName: '/dev/xvda',
-        volume: BlockDeviceVolume.ebs(50, {
-          encrypted: true,
-        })},
-      ],
-    });
-    props.database.allowConnectionsFrom(this.bastion);
+    // this.bastion = new BastionHostLinux(this, 'Bastion', {
+    //   vpc: props.vpc,
+    //   subnetSelection: {
+    //     subnetType: SubnetType.PUBLIC,
+    //   },
+    //   blockDevices: [{
+    //     deviceName: '/dev/xvda',
+    //     volume: BlockDeviceVolume.ebs(50, {
+    //       encrypted: true,
+    //     })},
+    //   ],
+    // });
+    // props.database.allowConnectionsFrom(this.bastion);
 
     // Granting the bastion access to the entire EFS file-system.
     // This can also be safely removed
-    new MountableEfs(this, {
-      filesystem: props.mountableFileSystem.fileSystem,
-    }).mountToLinuxInstance(this.bastion.instance, {
-      location: '/mnt/efs',
-    });
+    // new MountableEfs(this, {
+    //   filesystem: props.mountableFileSystem.fileSystem,
+    // }).mountToLinuxInstance(this.bastion.instance, {
+    //   location: '/mnt/efs',
+    // });
 
     this.version = new VersionQuery(this, 'Version', {
       version: props.deadlineVersion,
@@ -165,27 +165,27 @@ export class ServiceTier extends cdk.Stack {
       userAwsThinkboxEulaAcceptance: props.acceptAwsThinkboxEula,
     });
 
-    const serverCert = new X509CertificatePem(this, 'RQCert', {
-      subject: {
-        cn: `renderqueue.${props.dnsZone.zoneName}`,
-        o: 'RFDK-Sample',
-        ou: 'RenderQueueExternal',
-      },
-      signingCertificate: props.rootCa,
-    });
+    // const serverCert = new X509CertificatePem(this, 'RQCert', {
+    //   subject: {
+    //     cn: `renderqueue.${props.dnsZone.zoneName}`,
+    //     o: 'RFDK-Sample',
+    //     ou: 'RenderQueueExternal',
+    //   },
+    //   signingCertificate: props.rootCa,
+    // });
 
     this.renderQueue = new RenderQueue(this, 'RenderQueue', {
       vpc: props.vpc,
       images: images,
       repository,
-      hostname: {
-        hostname: 'renderqueue',
-        zone: props.dnsZone,
-      },
+      // hostname: {
+      //   hostname: 'renderqueue',
+      //   zone: props.dnsZone,
+      // },
       trafficEncryption: {
-        externalTLS: {
-          rfdkCertificate: serverCert,
-        },
+        // externalTLS: {
+        //   rfdkCertificate: serverCert,
+        // },
         internalProtocol: ApplicationProtocol.HTTPS,
       },
       version: this.version,
@@ -198,7 +198,7 @@ export class ServiceTier extends cdk.Stack {
       // For an EFS and NFS filesystem, this requires the 'fsc' mount option.
       enableLocalFileCaching: true,
     });
-    this.renderQueue.connections.allowDefaultPortFrom(this.bastion);
+    // this.renderQueue.connections.allowDefaultPortFrom(this.bastion);
 
     // This is an optional feature that will set up your EC2 instances to be enabled for use with
     // the Session Manager. RFDK deploys EC2 instances that aren't available through a public subnet,

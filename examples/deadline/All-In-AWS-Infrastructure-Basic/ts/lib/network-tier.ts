@@ -15,9 +15,9 @@ import {
   SubnetType,
   Vpc,
 } from '@aws-cdk/aws-ec2';
-import {
-  PrivateHostedZone,
-} from '@aws-cdk/aws-route53';
+// import {
+//   PrivateHostedZone,
+// } from '@aws-cdk/aws-route53';
 import * as cdk from '@aws-cdk/core';
 
 /**
@@ -33,7 +33,7 @@ export class NetworkTier extends cdk.Stack {
   /**
    * Internal DNS zone for the VPC.
    */
-  public readonly dnsZone: PrivateHostedZone;
+  // public readonly dnsZone: PrivateHostedZone;
 
   /**
    * The interface endpoints for the AWS services used in this app.
@@ -134,9 +134,9 @@ export class NetworkTier extends cdk.Stack {
       });
     });
 
-    this.dnsZone = new PrivateHostedZone(this, 'DnsZone', {
-      vpc: this.vpc,
-      zoneName: 'deadline-test.internal',
-    });
+    // this.dnsZone = new PrivateHostedZone(this, 'DnsZone', {
+    //   vpc: this.vpc,
+    //   zoneName: 'deadline-test.internal',
+    // });
   }
 }

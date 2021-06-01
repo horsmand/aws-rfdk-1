@@ -11,8 +11,8 @@ import {
 } from '@aws-cdk/aws-ec2';
 import * as cdk from '@aws-cdk/core';
 import {
-  IHost,
-  InstanceUserDataProvider,
+  // IHost,
+  // InstanceUserDataProvider,
   IRenderQueue,
   IWorkerFleet,
   UsageBasedLicense,
@@ -24,8 +24,8 @@ import {
   IHealthMonitor,
   SessionManagerHelper,
 } from 'aws-rfdk';
-import { Asset } from '@aws-cdk/aws-s3-assets';
-import * as path from 'path'
+// import { Asset } from '@aws-cdk/aws-s3-assets';
+// import * as path from 'path'
 
 /**
  * Properties for {@link ComputeTier}.
@@ -67,35 +67,35 @@ export interface ComputeTierProps extends cdk.StackProps {
   readonly licenses?: UsageBasedLicense[];
 }
 
-class UserDataProvider extends InstanceUserDataProvider {
-  preCloudWatchAgent(host: IHost): void {
-    host.userData.addCommands('echo preCloudWatchAgent');
-  }
-  preRenderQueueConfiguration(host: IHost): void {
-    host.userData.addCommands('echo preRenderQueueConfiguration');
-  }
-  preWorkerConfiguration(host: IHost): void {
-    host.userData.addCommands('echo preWorkerConfiguration');
-  }
-  postWorkerLaunch(host: IHost): void {
-    host.userData.addCommands('echo postWorkerLaunch');
-    if (host.node.scope != undefined) {
-      const testScript = new Asset(
-        host.node.scope as cdk.Construct,
-        'SampleAsset',
-        {path: path.join(__dirname, '..', '..', 'scripts', 'configure_worker.sh')},
-      );
-      testScript.grantRead(host);
-      const localPath = host.userData.addS3DownloadCommand({
-        bucket: testScript.bucket,
-        bucketKey: testScript.s3ObjectKey,
-      });
-      host.userData.addExecuteFileCommand({
-        filePath: localPath,
-      })
-    }
-  }
-}
+// class UserDataProvider extends InstanceUserDataProvider {
+//   preCloudWatchAgent(host: IHost): void {
+//     host.userData.addCommands('echo preCloudWatchAgent');
+//   }
+//   preRenderQueueConfiguration(host: IHost): void {
+//     host.userData.addCommands('echo preRenderQueueConfiguration');
+//   }
+//   preWorkerConfiguration(host: IHost): void {
+//     host.userData.addCommands('echo preWorkerConfiguration');
+//   }
+//   postWorkerLaunch(host: IHost): void {
+//     host.userData.addCommands('echo postWorkerLaunch');
+//     if (host.node.scope != undefined) {
+//       const testScript = new Asset(
+//         host.node.scope as cdk.Construct,
+//         'SampleAsset',
+//         {path: path.join(__dirname, '..', '..', 'scripts', 'configure_worker.sh')},
+//       );
+//       testScript.grantRead(host);
+//       const localPath = host.userData.addS3DownloadCommand({
+//         bucket: testScript.bucket,
+//         bucketKey: testScript.s3ObjectKey,
+//       });
+//       host.userData.addExecuteFileCommand({
+//         filePath: localPath,
+//       })
+//     }
+//   }
+// }
 
 /**
  * The computer tier consists of raw compute power. For a Deadline render farm,
@@ -135,7 +135,8 @@ export class ComputeTier extends cdk.Stack {
       workerMachineImage: props.workerMachineImage,
       healthMonitor: this.healthMonitor,
       keyName: props.keyPairName,
-      userDataProvider: new UserDataProvider(this, 'UserDataProvider'),
+      // userDataProvider: new UserDataProvider(this, 'UserDataProvider'),
+      minCapacity: 1,
     });
 
     // This is an optional feature that will set up your EC2 instances to be enabled for use with

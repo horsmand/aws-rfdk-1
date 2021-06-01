@@ -14,9 +14,9 @@ import {
 import {
   StorageTier,
   StorageTierDocDB,
-  StorageTierMongoDB,
+  // StorageTierMongoDB,
 } from '../lib/storage-tier';
-import { SecurityTier } from '../lib/security-tier';
+// import { SecurityTier } from '../lib/security-tier';
 import {
   InstanceClass,
   InstanceSize,
@@ -60,44 +60,50 @@ const app = new cdk.App();
 // --- Network Tier --- //
 // -------------------- //
 
-const network = new NetworkTier(app, 'NetworkTier', { env });
+const network = new NetworkTier(app, 'NetworkTier2', { env });
 
 // --------------------- //
 // --- Security Tier --- //
 // --------------------- //
 
-const security = new SecurityTier(app, 'SecurityTier', { env });
+// const security = new SecurityTier(app, 'SecurityTier2', { env });
 
 // -------------------- //
 // --- Storage Tier --- //
 // -------------------- //
 
 let storage: StorageTier;
-if (config.deployMongoDB) {
-  storage = new StorageTierMongoDB(app, 'StorageTier', {
-    env,
-    vpc: network.vpc,
-    databaseInstanceType: InstanceType.of(InstanceClass.R5, InstanceSize.LARGE),
-    alarmEmail: config.alarmEmailAddress,
-    rootCa: security.rootCa,
-    dnsZone: network.dnsZone,
-    acceptSsplLicense: config.acceptSsplLicense,
-    keyPairName: config.keyPairName ? config.keyPairName : undefined,
-  });
-} else {
-  storage = new StorageTierDocDB(app, 'StorageTier', {
-    env,
-    vpc: network.vpc,
-    databaseInstanceType: InstanceType.of(InstanceClass.R5, InstanceSize.LARGE),
-    alarmEmail: config.alarmEmailAddress,
-  });
-}
+// if (config.deployMongoDB) {
+//   storage = new StorageTierMongoDB(app, 'StorageTier2', {
+//     env,
+//     vpc: network.vpc,
+//     databaseInstanceType: InstanceType.of(InstanceClass.R5, InstanceSize.LARGE),
+//     alarmEmail: config.alarmEmailAddress,
+//     rootCa: security.rootCa,
+//     dnsZone: network.dnsZone,
+//     acceptSsplLicense: config.acceptSsplLicense,
+//     keyPairName: config.keyPairName ? config.keyPairName : undefined,
+//   });
+// } else {
+//   storage = new StorageTierDocDB(app, 'StorageTier2', {
+//     env,
+//     vpc: network.vpc,
+//     databaseInstanceType: InstanceType.of(InstanceClass.R5, InstanceSize.LARGE),
+//     alarmEmail: config.alarmEmailAddress,
+//   });
+// }
+storage = new StorageTierDocDB(app, 'StorageTier2', {
+  env,
+  vpc: network.vpc,
+  databaseInstanceType: InstanceType.of(InstanceClass.R5, InstanceSize.LARGE),
+  alarmEmail: config.alarmEmailAddress,
+});
 
 // -------------------- //
 // --- Service Tier --- //
 // -------------------- //
 
-const service = new ServiceTier(app, 'ServiceTier', {
+const service = new ServiceTier(app, 'ServiceTier2', {
   env,
   database: storage.database,
   mountableFileSystem: storage.mountableFileSystem,
@@ -105,8 +111,8 @@ const service = new ServiceTier(app, 'ServiceTier', {
   deadlineVersion: config.deadlineVersion,
   ublCertsSecretArn: config.ublCertificatesSecretArn,
   ublLicenses: config.ublLicenses,
-  rootCa: security.rootCa,
-  dnsZone: network.dnsZone,
+  // rootCa: security.rootCa,
+  // dnsZone: network.dnsZone,
   acceptAwsThinkboxEula: config.acceptAwsThinkboxEula,
 });
 
@@ -114,7 +120,7 @@ const service = new ServiceTier(app, 'ServiceTier', {
 // --- Compute Tier --- //
 // -------------------- //
 
-new ComputeTier(app, 'ComputeTier', {
+new ComputeTier(app, 'ComputeTier2', {
   env,
   vpc: network.vpc,
   renderQueue: service.renderQueue,
