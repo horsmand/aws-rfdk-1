@@ -68,7 +68,7 @@
     "@aws-cdk/assert": "1.106.1",
     "@types/aws-lambda": "^8.10.76",
     "@types/jest": "^26.0.23",
-    "@types/sinon": "^10.0.1",
+    "@types/sinon": "^10.0.2",
     "aws-sdk": "^2.917.0",
     "aws-sdk-mock": "^5.1.0",
     "cdk-build-tools": "0.33.0",
