@@ -21,7 +21,7 @@ class AppConfig {
    *
    * See https://www.awsthinkbox.com/end-user-license-agreement for the terms of the agreement.
    */
-  public readonly acceptAwsThinkboxEula: AwsThinkboxEulaAcceptance = AwsThinkboxEulaAcceptance.USER_REJECTS_AWS_THINKBOX_EULA;
+  public readonly acceptAwsThinkboxEula: AwsThinkboxEulaAcceptance = AwsThinkboxEulaAcceptance.USER_ACCEPTS_AWS_THINKBOX_EULA;
 
   /**
    * Fill this in if you want to receive alarm emails when:
@@ -50,17 +50,17 @@ class AppConfig {
   /**
    * (Optional) A secret (in binary form) in SecretsManager that stores the UBL certificates in a .zip file.
    */
-  public readonly ublCertificatesSecretArn?: string;
+  public readonly ublCertificatesSecretArn?: string = 'arn:aws:secretsmanager:us-west-2:121858446379:secret:Certificates-9KxP1K';
 
   /**
    * (Optional) The UBL licenses to use.
    */
-  public readonly ublLicenses?: UsageBasedLicense[];
+  public readonly ublLicenses?: UsageBasedLicense[] = [ UsageBasedLicense.forHoudini(), UsageBasedLicense.forMantra() ];
 
   /**
    * (Optional) The name of the EC2 keypair to associate with instances.
    */
-  public readonly keyPairName?: string;
+  public readonly keyPairName?: string = 'OpenSshDevBox';
 
   /**
    * Whether to use MongoDB to back the render farm.

@@ -63,3 +63,6 @@ while ! is-rcs-ready; do
     sleep 1
 done
 echo "RCS is ready"
+
+export PASSWORD=ExamplePassword1#
+printenv PASSWORD | sudo -u ec2-user "$deadlinecommand" secrets ConfigureServerMachine Admin1 defaultKey ec2-user

@@ -41,7 +41,7 @@ if test -f "$REPOSITORY_FILE_PATH"; then
         exit 1
     fi
     echo "Database Connection is valid.  Validating Deadline Version."
-    
+
     # Following runs the .ini file as a script while suppressing all the errors. This creates bash variables with
     # the key's name and sets its value to the value specified in .ini file.
     # This is a quick way to read the .ini values but is not a full-proof way. Since we dont have common keys in
@@ -82,7 +82,9 @@ if [ ! -z "$DEADLINE_REPOSITORY_SETTINGS_FILE" ]; then
   fi
 fi
 
-$REPO_INSTALLER --mode unattended --setpermissions false --prefix "$PREFIX" --installmongodb false --backuprepo false ${INSTALLER_DB_ARGS_STRING} $REPOSITORY_SETTINGS_ARG_STRING
+secrets_management_args="--installSecretsManagement true --secretsAdminName Admin1 --secretsAdminPassword ExamplePassword1#"
+
+$REPO_INSTALLER --mode unattended --setpermissions false --prefix "$PREFIX" --installmongodb false --backuprepo false $INSTALLER_DB_ARGS_STRING $REPOSITORY_SETTINGS_ARG_STRING $secrets_management_args
 
 set -x
 

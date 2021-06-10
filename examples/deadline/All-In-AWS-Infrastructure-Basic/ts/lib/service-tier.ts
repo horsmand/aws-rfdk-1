@@ -4,10 +4,10 @@
  */
 
 import {
-  BastionHostLinux,
-  BlockDeviceVolume,
+  // BastionHostLinux,
+  // BlockDeviceVolume,
   IVpc,
-  SubnetType,
+  // SubnetType,
 } from '@aws-cdk/aws-ec2';
 import {
   ApplicationProtocol,
@@ -95,7 +95,7 @@ export class ServiceTier extends cdk.Stack {
   /**
    * A bastion host to connect to the render farm with.
    */
-  public readonly bastion: BastionHostLinux;
+  // public readonly bastion: BastionHostLinux;
 
   /**
    * The render queue.
@@ -125,27 +125,27 @@ export class ServiceTier extends cdk.Stack {
     // Not a critical component of the farm, so this can be safely removed. An alternative way
     // to access your hosts is also provided by the Session Manager, which is also configured
     // later in this example.
-    this.bastion = new BastionHostLinux(this, 'Bastion', {
-      vpc: props.vpc,
-      subnetSelection: {
-        subnetType: SubnetType.PUBLIC,
-      },
-      blockDevices: [{
-        deviceName: '/dev/xvda',
-        volume: BlockDeviceVolume.ebs(50, {
-          encrypted: true,
-        })},
-      ],
-    });
-    props.database.allowConnectionsFrom(this.bastion);
+    // this.bastion = new BastionHostLinux(this, 'Bastion', {
+    //   vpc: props.vpc,
+    //   subnetSelection: {
+    //     subnetType: SubnetType.PUBLIC,
+    //   },
+    //   blockDevices: [{
+    //     deviceName: '/dev/xvda',
+    //     volume: BlockDeviceVolume.ebs(50, {
+    //       encrypted: true,
+    //     })},
+    //   ],
+    // });
+    // props.database.allowConnectionsFrom(this.bastion);
 
     // Granting the bastion access to the entire EFS file-system.
     // This can also be safely removed
-    new MountableEfs(this, {
-      filesystem: props.mountableFileSystem.fileSystem,
-    }).mountToLinuxInstance(this.bastion.instance, {
-      location: '/mnt/efs',
-    });
+    // new MountableEfs(this, {
+    //   filesystem: props.mountableFileSystem.fileSystem,
+    // }).mountToLinuxInstance(this.bastion.instance, {
+    //   location: '/mnt/efs',
+    // });
 
     this.version = new VersionQuery(this, 'Version', {
       version: props.deadlineVersion,
@@ -198,7 +198,7 @@ export class ServiceTier extends cdk.Stack {
       // For an EFS and NFS filesystem, this requires the 'fsc' mount option.
       enableLocalFileCaching: true,
     });
-    this.renderQueue.connections.allowDefaultPortFrom(this.bastion);
+    // this.renderQueue.connections.allowDefaultPortFrom(this.bastion);
 
     // This is an optional feature that will set up your EC2 instances to be enabled for use with
     // the Session Manager. RFDK deploys EC2 instances that aren't available through a public subnet,
